@@ -27,5 +27,6 @@ public class User extends GenericEntity{
 	private String bio;
 	private Gender gender;
 	private UserType type;
+	private Adress address;
 	
 }
