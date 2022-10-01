@@ -26,5 +26,6 @@ public class UserDto extends GenericDto{
 	private String bio;
 	private Gender gender;
 	private UserType type;
+	private AdressDto adress;
 	
 }
