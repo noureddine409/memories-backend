@@ -18,7 +18,8 @@ import com.memories.app.model.User;
 public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	
 	
-	@GetMapping("/")
+	
+	@GetMapping
 	public ResponseEntity<MemoryDto> func() {
 		User user = new User();
 		user.setEmail("email");;
