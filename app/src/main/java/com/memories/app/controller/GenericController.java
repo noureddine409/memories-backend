@@ -22,10 +22,12 @@ public abstract class GenericController <T extends GenericEntity, D extends Gene
 		return classTypeProvider.getClasses(this, GenericController.class);
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected T convertToEntity(D dto) {
 		return (T) modelMapper.map(dto, getClasses()[0]);
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected D convertToDto(T entity) {
 		return (D) modelMapper.map(entity, getClasses()[1]);
 	}
