@@ -25,7 +25,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import com.memories.app.exception.BusinessException;
-import com.memories.app.model.GenericEnum.RoleName;
 import com.memories.app.security.JwtAuthorizationFilter;
 import com.memories.app.utils.JwtUtil;
 
@@ -84,8 +83,8 @@ public class SecurityConfig {
         @Value("${form.auth.white-list}")
         private List<String> formAuthWhiteList;
 
-        @Value("${form.auth.block-list}")
-        private List<String> formAuthBlockList;
+        //@Value("${form.auth.block-list}")
+        //private List<String> formAuthBlockList;
 
         @Value("${form.login.remember-me.key}")
         private String rememberMeKey;
@@ -106,13 +105,12 @@ public class SecurityConfig {
                     .csrf().disable()
                     .sessionManagement((session) -> session.sessionCreationPolicy(IF_REQUIRED))
                     .requestMatchers()
-                    .antMatchers(Stream.concat(formAuthWhiteList.stream(), formAuthBlockList.stream()).toArray(String[]::new))
+                    .antMatchers(formAuthWhiteList.stream().toArray(String[]::new))
                     .and()
                     .authorizeHttpRequests((authorize) -> {
                                 try {
                                     authorize
                                             .antMatchers(formAuthWhiteList.toArray(String[]::new)).permitAll()
-                                            .antMatchers(formAuthBlockList.toArray(String[]::new)).hasRole(RoleName.DEV.name())
                                             .anyRequest().authenticated();
                                 } catch (Exception e) {
                                     throw new BusinessException(e.getMessage(), e.getCause(), null, null);
