@@ -47,5 +47,15 @@ public class GenericEnum {
 		GIF
 	}
 	
+	public enum RoleName {
+		USER,
+		ADMIN,
+		DEV
+	}
+	
+	public enum JwtTokenType {
+        ACCESS,
+        REFRESH
+    }
 
 }
