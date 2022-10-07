@@ -30,7 +30,7 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 	}
 
 	@Override
-	public User saveUser(User user) {
+	public User save(User user) throws ElementAlreadyExistException {
 		if (userRepository.findByEmail(user.getEmail()) == null)
             throw new ElementAlreadyExistException(null, new ElementAlreadyExistException(), CoreConstant.Exception.ALREADY_EXISTS,
                     new Object[]{user.getEmail()});
@@ -41,7 +41,7 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 	}
 
 	@Override
-	public User findById(Long id) {
+	public User findById(Long id) throws ElementNotFoundException{
 		Optional<User> user = userRepository.findById(id);
 		if (user.isPresent()) {
 			return user.get();
