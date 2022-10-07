@@ -65,7 +65,7 @@ public class AuthController {
     public ResponseEntity<UserDto> saveUser(@RequestBody UserDto userDto) throws ElementAlreadyExistException{
     	User convertedUser = convertToEntity(userDto);
     	
-    	User savedUser = userService.saveUser(convertedUser);
+    	User savedUser = userService.save(convertedUser);
     	
     	return ResponseEntity.ok().body(convertToDto(savedUser));
     }
