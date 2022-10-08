@@ -2,6 +2,8 @@ package com.memories.app.model;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 
@@ -19,8 +21,15 @@ public abstract class GenericEntity {
 	@GeneratedValue
 	private Long id;
 	
+	@CreatedDate
 	private LocalDateTime createdAt;
 	
+	@LastModifiedDate
 	private LocalDateTime updatedAt;
+	
+	public void setCreatedAt(LocalDateTime date) {
+		this.createdAt = (createdAt == null ? LocalDateTime.now():date);
+
+	}
 	
 }
