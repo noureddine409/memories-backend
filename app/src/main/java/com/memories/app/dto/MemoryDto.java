@@ -26,7 +26,5 @@ public class MemoryDto extends GenericDto {
 	private Activities activity;
 	private UserDto createdBy;
 	private List<UserDto> mensioned;
-	private List<CommentDto> comments;
-	private List<UserDto> lovers;
 	
 }
