@@ -1,5 +1,6 @@
 package com.memories.app.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
@@ -40,6 +41,7 @@ public class GenericServiceImpl<T extends GenericEntity> implements GenericServi
         entity.setCreatedAt(newEntity.getCreatedAt());
         modelMapper.map(entity, newEntity);
         newEntity.setId(id);
+        newEntity.setCreatedAt(LocalDateTime.now());
 
         return genericRepository.save(newEntity);
     }
