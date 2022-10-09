@@ -12,7 +12,7 @@ public class Location extends GenericEntity{
 
 	
 	private double longitude;
-	private double langitude;
+	private double latitude;
 	
 	
 }

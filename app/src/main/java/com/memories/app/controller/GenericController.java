@@ -2,7 +2,10 @@ package com.memories.app.controller;
 
 
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,19 @@ public abstract class GenericController <T extends GenericEntity, D extends Gene
 	
 	@Autowired
 	private ClassTypeProvider classTypeProvider;
+	
+	protected Map<String, Object> convertToMap(D dto) throws IllegalArgumentException, IllegalAccessException {
+		T obj = convertToEntity(dto);
+		Map<String, Object> converted = new HashMap<String, Object>();
+		Field[] fields = obj.getClass().getDeclaredFields();
+		for(Field field: fields) {
+			field.setAccessible(true);
+			Object value = field.get(obj);
+			if(value!=null)
+			converted.put(field.getName(), value);
+		}
+		return converted;
+	}
 	
 	protected Class<?>[] getClasses(){
 		return classTypeProvider.getClasses(this, GenericController.class);
