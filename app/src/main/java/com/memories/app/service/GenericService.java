@@ -1,11 +1,15 @@
 package com.memories.app.service;
 
+import java.util.Map;
+
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.model.GenericEntity;
 
 public interface GenericService<T extends GenericEntity> {
 	public T update(final Long id, final T entity) throws ElementNotFoundException ;
+	
+	public T partialUpdate(final Long id, final Map<String, Object> fields) throws ElementNotFoundException ;
 	
 	T findById(final Long id) throws ElementNotFoundException;
 

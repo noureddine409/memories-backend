@@ -1,6 +1,8 @@
 package com.memories.app.service.impl;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 import org.modelmapper.ModelMapper;
@@ -8,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ReflectionUtils;
 
 import com.memories.app.commun.CoreConstant;
 import com.memories.app.exception.BusinessException;
@@ -41,7 +44,7 @@ public class GenericServiceImpl<T extends GenericEntity> implements GenericServi
         entity.setCreatedAt(newEntity.getCreatedAt());
         modelMapper.map(entity, newEntity);
         newEntity.setId(id);
-        newEntity.setCreatedAt(LocalDateTime.now());
+        newEntity.setUpdatedAt(LocalDateTime.now());
 
         return genericRepository.save(newEntity);
     }
@@ -78,5 +81,24 @@ public class GenericServiceImpl<T extends GenericEntity> implements GenericServi
             throw new ElementAlreadyExistException(null, new ElementAlreadyExistException(), CoreConstant.Exception.ALREADY_EXISTS, new Object[]{id});
         }
     }
+	
+	@Override
+	public T partialUpdate(Long id, Map<String, Object> fields) throws ElementNotFoundException {
+		
+		final Optional<T> foundEntity = genericRepository.findById(id);
+        if (!foundEntity.isPresent()) {
+        	//LOG.warn(CoreConstant.Exception.NOT_FOUND);
+            throw new ElementNotFoundException(null, new ElementNotFoundException(), CoreConstant.Exception.NOT_FOUND, new Object[]{id});
+        }
+        T newEntity = foundEntity.get();
+        fields.forEach((k, v) -> {
+        	Field field = ReflectionUtils.findField(newEntity.getClass(), k);
+        	field.setAccessible(true);
+        	ReflectionUtils.setField(field, newEntity, v);
+        });
+        newEntity.setUpdatedAt(LocalDateTime.now());
+        
+        return genericRepository.save(newEntity);
+	}
 
 }

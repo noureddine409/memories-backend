@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,7 +50,7 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	}
 	
 	@PutMapping("{id}")
-	ResponseEntity<MemoryDto> updateMemory(@PathVariable Long id, @RequestBody MemoryDto memoryDto)
+	public ResponseEntity<MemoryDto> updateMemory(@PathVariable Long id, @RequestBody MemoryDto memoryDto)
 	 throws ElementNotFoundException {
 		final User currentUser = getCurrentUser();
 		if(isOwner(currentUser, memoriesService.findById(id))) {
@@ -60,6 +61,17 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 			return new ResponseEntity<MemoryDto>(convertToDto(saved), HttpStatus.OK);
 		}
 		
+		return new ResponseEntity<>(memoryDto, HttpStatus.UNAUTHORIZED);
+	}
+	
+	@PatchMapping("/{id}")
+	public ResponseEntity<MemoryDto> patch(@PathVariable Long id, @RequestBody MemoryDto memoryDto)
+			 throws ElementNotFoundException, IllegalArgumentException, IllegalAccessException {
+		final User currentUser = getCurrentUser();
+		if(isOwner(currentUser, memoriesService.findById(id))) {
+			Memory updated = memoriesService.partialUpdate(id, convertToMap(memoryDto));
+			return new ResponseEntity<MemoryDto>(convertToDto(updated), HttpStatus.OK);
+		}
 		return new ResponseEntity<>(memoryDto, HttpStatus.UNAUTHORIZED);
 	}
 	
