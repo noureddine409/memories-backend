@@ -1,5 +1,7 @@
 package com.memories.app.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.memories.app.dto.MemoryDto;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.model.Memory;
@@ -25,6 +26,13 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	
 	@Autowired
 	private MemoriesService memoriesService;
+	
+	@GetMapping
+	ResponseEntity<List<MemoryDto>> getAll() {
+		List<Memory> entities = memoriesService.findAll();
+		convertListToDto(entities, MemoryDto.class);
+		return new ResponseEntity<List<MemoryDto>>(convertListToDto(entities, MemoryDto.class), HttpStatus.OK);
+	}
 	
 	@GetMapping("/{id}")
 	ResponseEntity<MemoryDto> getMemoryById(@PathVariable Long id){

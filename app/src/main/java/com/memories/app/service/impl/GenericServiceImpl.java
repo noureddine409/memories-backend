@@ -2,6 +2,7 @@ package com.memories.app.service.impl;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 
 import com.memories.app.commun.CoreConstant;
+import com.memories.app.commun.CoreConstant.Exception;
 import com.memories.app.exception.BusinessException;
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
@@ -99,6 +101,15 @@ public class GenericServiceImpl<T extends GenericEntity> implements GenericServi
         newEntity.setUpdatedAt(LocalDateTime.now());
         
         return genericRepository.save(newEntity);
+	}
+	@Override
+	public List<T> findAll() throws BusinessException {
+		try {
+			return genericRepository.findAll();
+		}
+		catch(BusinessException e){
+			throw new BusinessException(null, e, Exception.FIND_ELEMENTS, null);
+		}
 	}
 
 }
