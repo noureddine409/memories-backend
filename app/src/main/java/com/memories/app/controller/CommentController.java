@@ -1,5 +1,7 @@
 package com.memories.app.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,11 @@ public class CommentController extends GenericController<Comment, CommentDto> {
 	@GetMapping("/{id}")
 	public ResponseEntity<CommentDto> getById(@PathVariable Long id){
 		return new ResponseEntity<>(convertToDto(commentService.findById(id)), HttpStatus.OK);
+	}
+	
+	@GetMapping("/memory/{id}")
+	public ResponseEntity<List<CommentDto>> getMemoryComments(@PathVariable Long id) {
+		return new ResponseEntity<>(convertListToDto(commentService.getCommentsByMemory(id), CommentDto.class), HttpStatus.OK);
 	}
 	
 	@PostMapping
