@@ -92,4 +92,5 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		return userRepository.followExist(idFollower, idFollowing);
 	}
 
+
 }

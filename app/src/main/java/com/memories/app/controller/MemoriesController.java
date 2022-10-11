@@ -83,6 +83,16 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 		return new ResponseEntity<>(memoryDto, HttpStatus.UNAUTHORIZED);
 	}
 	
+	@PostMapping("/loves/{id}")
+	public ResponseEntity<Boolean> love(@PathVariable Long id) {
+		memoriesService.findById(id);
+		final Long currentUserId = getCurrentUserId();
+		if(memoriesService.loveExists(currentUserId, id)) {
+			return new ResponseEntity<Boolean>(memoriesService.deleteLove(currentUserId, id), HttpStatus.OK);
+		}
+		return new ResponseEntity<Boolean>(memoriesService.addLove(currentUserId, id), HttpStatus.OK);
+	}
+	
 	private Boolean isOwner(User currentUser, Memory memory) {
 		if(currentUser.getEmail().equals(memory.getCreatedBy().getEmail())) {
 			return Boolean.TRUE;
