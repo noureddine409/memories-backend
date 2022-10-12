@@ -3,6 +3,8 @@ package com.memories.app.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.memories.app.commun.CoreConstant.Pagination;
+import com.memories.app.dto.SearchDto;
 import com.memories.app.dto.UserDto;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.model.User;
@@ -24,10 +28,9 @@ public class UserController extends GenericController<User, UserDto> {
 	
 	@Autowired
 	private UserService userService;
-	
 	@GetMapping
-	ResponseEntity<List<UserDto>> getAll() {
-		List<User> entities = userService.findAll();
+	ResponseEntity<List<UserDto>> getAll(@RequestBody SearchDto search) {
+		List<User> entities = userService.findAll(PageRequest.of(search.getPage(), search.getSize()) , search.getFilters()).getContent();
 		return new ResponseEntity<List<UserDto>>(convertListToDto(entities, UserDto.class), HttpStatus.OK);
 	}
 	
@@ -70,5 +73,6 @@ public class UserController extends GenericController<User, UserDto> {
 		return new ResponseEntity<>(userService.getFollowing(id), HttpStatus.OK);
 		
 	}
+	
 
 }

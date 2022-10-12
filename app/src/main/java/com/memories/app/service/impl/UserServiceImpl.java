@@ -1,13 +1,18 @@
 package com.memories.app.service.impl;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import com.memories.app.commun.CoreConstant;
+import com.memories.app.dto.Filter;
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.model.User;
@@ -91,5 +96,24 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 	public Boolean followExist(Long idFollower, Long idFollowing) {
 		return userRepository.followExist(idFollower, idFollowing);
 	}
+	
+	@Override
+	protected Example<User> preparedFilters(List<Filter> filters) throws IllegalAccessException, NoSuchFieldException {
+		Example<User> example = null;
 
+        if (!CollectionUtils.isEmpty(filters)) {
+        	final User user = new User();
+        	
+        	for (final Filter filter: filters) {
+        		final Field fieldName = user.getClass().getDeclaredField(filter.getFilterName());
+        		if(fieldName !=null) {
+        			fieldName.setAccessible(true);
+        			fieldName.set(user, filter.getAppliedValue());
+        		}
+        	}
+        	example = Example.of(user, ExampleMatcher.matchingAny());
+        }
+        
+        return example;
+	}
 }
