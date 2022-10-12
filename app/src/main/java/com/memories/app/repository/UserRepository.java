@@ -38,4 +38,5 @@ public interface UserRepository extends GenericRepository<User> {
 			+ "WHERE id(follower)=$id\r\n"
 			+ "return following")
 	List<User> getFollowing(@Param("id") Long id);
+	
 } 
