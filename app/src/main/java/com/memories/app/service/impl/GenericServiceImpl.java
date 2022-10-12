@@ -10,17 +10,22 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 
 import com.memories.app.commun.CoreConstant;
 import com.memories.app.commun.CoreConstant.Exception;
+import com.memories.app.dto.Filter;
 import com.memories.app.exception.BusinessException;
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.model.GenericEntity;
 import com.memories.app.repository.GenericRepository;
 import com.memories.app.service.GenericService;
+
 
 @Service
 public class GenericServiceImpl<T extends GenericEntity> implements GenericService<T> {
@@ -111,5 +116,23 @@ public class GenericServiceImpl<T extends GenericEntity> implements GenericServi
 			throw new BusinessException(null, e, Exception.FIND_ELEMENTS, null);
 		}
 	}
+	@Override
+	public Page<T> findAll(Pageable pageable, List<Filter> filters) {
+		try {
+            final Example<T> preparedFilters = preparedFilters(filters);
+            if(preparedFilters != null){
+                return genericRepository.findAll(preparedFilters,pageable);
+            } else{
+                return genericRepository.findAll(pageable);
+            }
+        } catch (final BusinessException | IllegalAccessException | NoSuchFieldException e) {
+            LOG.error("Error",e);
+            throw new BusinessException(null, e, CoreConstant.Exception.FIND_ELEMENTS, null);
+        }
+	}
+	
+	protected Example<T> preparedFilters(final List<Filter> filters) throws IllegalAccessException, NoSuchFieldException {
+        return null;
+    }
 
 }

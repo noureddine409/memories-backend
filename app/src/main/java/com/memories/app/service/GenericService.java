@@ -3,6 +3,10 @@ package com.memories.app.service;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.memories.app.dto.Filter;
 import com.memories.app.exception.BusinessException;
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
@@ -21,4 +25,6 @@ public interface GenericService<T extends GenericEntity> {
     
     // TODO add pagination + sort + filter
     public List<T> findAll() throws BusinessException;
+    
+    Page<T> findAll(final Pageable pageable, final List<Filter> filters);
 }
