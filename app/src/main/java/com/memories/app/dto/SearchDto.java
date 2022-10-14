@@ -17,6 +17,8 @@ import com.memories.app.commun.CoreConstant.Pagination;
 
 
 public class SearchDto implements Serializable {
+	
+	private static final long serialVersionUID = 697346882356264965L;
 	private Integer page;
     private Integer size;
     private List<SortDto> sort;
