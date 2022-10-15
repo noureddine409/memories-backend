@@ -1,9 +1,12 @@
 package com.memories.app.controller;
 
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,11 +16,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.memories.app.dto.MemoryDto;
 import com.memories.app.exception.ElementNotFoundException;
+import com.memories.app.model.Media;
 import com.memories.app.model.Memory;
 import com.memories.app.model.User;
+import com.memories.app.service.AwsS3Service;
 import com.memories.app.service.MemoriesService;
 
 @RestController
@@ -26,6 +34,8 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	
 	@Autowired
 	private MemoriesService memoriesService;
+	@Autowired
+    private AwsS3Service awsS3Service;
 	
 	@GetMapping
 	ResponseEntity<List<MemoryDto>> getAll() {
@@ -38,11 +48,26 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	ResponseEntity<MemoryDto> getMemoryById(@PathVariable Long id){
 		return new ResponseEntity<MemoryDto>(convertToDto(memoriesService.findById(id)), HttpStatus.OK);
 	}
-	@PostMapping
-	ResponseEntity<MemoryDto> saveMemorie(@RequestBody MemoryDto memoryDto){
+	@PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	ResponseEntity<MemoryDto> saveMemorie(@RequestPart(value ="memory", required = true) MemoryDto memoryDto,
+			@RequestPart(value="files", required = false) MultipartFile[] multipartFiles){
 		final Memory entity = convertToEntity(memoryDto);
-		final User currentUser = getCurrentUser();
+		final User currentUser = getCurrentUser();	
+		ArrayList<Media> list = new ArrayList<Media>();
 		entity.setCreatedBy(currentUser);
+		if(multipartFiles != null) {
+			final int mediasnumber = multipartFiles.length ;
+			for(int i=0; i<mediasnumber; i++) {
+				Media media = new Media();
+				String path = awsS3Service.save(multipartFiles[i]);
+				media.setPath(path);
+				media.setCreatedAt(media.getCreatedAt());
+				list.add(media);
+				entity.setMedias(list);
+			}
+			
+		}		
+		
 		Memory saved = memoriesService.save(entity);
 		return new ResponseEntity<MemoryDto>(convertToDto(saved), HttpStatus.CREATED);
 	}
