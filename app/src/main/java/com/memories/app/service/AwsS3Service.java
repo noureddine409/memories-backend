@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 
@@ -58,7 +59,8 @@ public class AwsS3Service {
             final File file = convertMultiPartFileToFile(multipartFile);
             final String fileName = LocalDateTime.now() + "_" + file.getName();
             LOG.info("Uploading file with name {}", fileName);
-            final PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, fileName, file);
+            PutObjectRequest putObjectRequest = new PutObjectRequest(s3BucketName, fileName, file);
+            putObjectRequest.setCannedAcl(CannedAccessControlList.PublicRead);
             amazonS3.putObject(putObjectRequest) ;
             Files.delete(file.toPath()); // Remove the file locally created in the project folder
             return String.format("https://%s.s3.amazonaws.com/%s", s3BucketName, fileName);
@@ -69,6 +71,10 @@ public class AwsS3Service {
         }
         return null;
         
+    }
+    
+    public void delete(final String fileName) {
+    	amazonS3.deleteObject(s3BucketName, fileName);
     }
     
 }
