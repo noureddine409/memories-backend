@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.memories.app.dto.SearchDto;
 import com.memories.app.dto.UserDto;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.model.User;
+import com.memories.app.service.AwsS3Service;
 import com.memories.app.service.UserService;
 
 @RestController
@@ -26,6 +29,9 @@ public class UserController extends GenericController<User, UserDto> {
 	
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private AwsS3Service awsS3Service;
 	@GetMapping
 	ResponseEntity<List<UserDto>> getAll(@RequestBody SearchDto search) {
 		List<User> entities = userService.findAll(PageRequest.of(search.getPage(), search.getSize()) , search.getFilters()).getContent();
@@ -59,17 +65,41 @@ public class UserController extends GenericController<User, UserDto> {
 	}
 	
 	@GetMapping("/followers/{id}")
-	public ResponseEntity<List<User>> getFollowers(@PathVariable Long id) throws ElementNotFoundException {
+	public ResponseEntity<List<UserDto>> getFollowers(@PathVariable Long id) throws ElementNotFoundException {
 		userService.findById(id);
-		return new ResponseEntity<>(userService.getFollowers(id), HttpStatus.OK);
+		return new ResponseEntity<>(convertListToDto(userService.getFollowers(id), UserDto.class), HttpStatus.OK);
 		
 	}
 	
 	@GetMapping("/following/{id}")
-	public ResponseEntity<List<User>> getFollowing(@PathVariable Long id) throws ElementNotFoundException{
+	public ResponseEntity<List<UserDto>> getFollowing(@PathVariable Long id) throws ElementNotFoundException{
 		userService.findById(id);
-		return new ResponseEntity<>(userService.getFollowing(id), HttpStatus.OK);
+		return new ResponseEntity<>(convertListToDto(userService.getFollowing(id), UserDto.class), HttpStatus.OK);
 		
+	}
+	
+	@PatchMapping("/profilePic/{id}")
+	public ResponseEntity<UserDto> updateProfilePic(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+		User userFound = userService.findById(id);
+		final User currentUser = getCurrentUser();
+		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
+			final String url = awsS3Service.save(file);
+			userFound.setProfilePicture(url);
+			return new ResponseEntity<UserDto>(convertToDto(userService.update(id, currentUser)), HttpStatus.OK);
+			}
+		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	}
+	
+	@PatchMapping("/backgroundPic/{id}")
+	public ResponseEntity<UserDto> updatebackgroundPic(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+		User userFound = userService.findById(id);
+		final User currentUser = getCurrentUser();
+		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
+			final String url = awsS3Service.save(file);
+			userFound.setBackgroundPicture(url);
+			return new ResponseEntity<UserDto>(convertToDto(userService.update(id, currentUser)), HttpStatus.OK);
+			}
+		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
 	
 
