@@ -36,6 +36,7 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	private MemoriesService memoriesService;
 	@Autowired
     private AwsS3Service awsS3Service;
+
 	
 	@GetMapping
 	ResponseEntity<List<MemoryDto>> getAll() {
@@ -74,8 +75,13 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	
 	@DeleteMapping("/{id}")
 	ResponseEntity<Boolean> deleteMemorie(@PathVariable Long id) throws ElementNotFoundException {	
-		
-		if(isOwner(getCurrentUser(), memoriesService.findById(id)))  {
+		final Memory memoryFound = memoriesService.findById(id);
+		if(isOwner(getCurrentUser(), memoryFound))  {
+			final List<Media> medias = memoryFound.getMedias();
+			if(!medias.isEmpty())
+				medias.stream()
+					.forEach(media -> awsS3Service.delete(media.getMediaName()));
+				
 			return new ResponseEntity<>(memoriesService.delete(id), HttpStatus.OK);
 		}
 		

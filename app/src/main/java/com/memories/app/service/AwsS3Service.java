@@ -73,4 +73,8 @@ public class AwsS3Service {
         
     }
     
+    public void delete(final String fileName) {
+    	amazonS3.deleteObject(s3BucketName, fileName);
+    }
+    
 }

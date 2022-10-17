@@ -16,4 +16,9 @@ public class Media extends GenericEntity {
 	private String path;
 	private MediaType type;
 	private Memory memory;
+	
+	public String getMediaName() {
+		String[] splits = getPath().split("s3.amazonaws.com/");
+		return splits[splits.length - 1];
+	}
 }
