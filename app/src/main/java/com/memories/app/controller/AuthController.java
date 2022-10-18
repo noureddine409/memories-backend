@@ -4,17 +4,23 @@ package com.memories.app.controller;
 
 
 
+import java.io.UnsupportedEncodingException;
+
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -61,13 +67,29 @@ public class AuthController {
         return modelMapper.map(dto, User.class);
     }
     
+    private String getSiteURL(HttpServletRequest request) {
+    	String siteURL = request.getRequestURL().toString();
+    	return siteURL.replace(request.getServletPath(), "");
+    }
+    
     @PostMapping("/register")
-    public ResponseEntity<UserDto> saveUser(@RequestBody UserDto userDto) throws ElementAlreadyExistException{
+    public ResponseEntity<UserDto> saveUser(@RequestBody UserDto userDto, HttpServletRequest request)
+    		throws ElementAlreadyExistException, UnsupportedEncodingException, MessagingException  {
     	User convertedUser = convertToEntity(userDto);
-    	
+    	userService.generateVerificationCode(convertedUser);
     	User savedUser = userService.save(convertedUser);
     	
+    	userService.sendVerificationEmail(savedUser, getSiteURL(request));
+    	
     	return ResponseEntity.ok().body(convertToDto(savedUser));
+    }
+    
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyUser(@RequestParam("code") String code) {
+    	if( userService.verify(code)) {
+    		return new ResponseEntity<String>("verify_success", HttpStatus.OK);
+    	}
+    	return new ResponseEntity<String>("verify_fail", HttpStatus.UNAUTHORIZED);
     }
     
     @PostMapping("/login")

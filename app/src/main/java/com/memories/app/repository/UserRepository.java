@@ -11,6 +11,8 @@ import com.memories.app.model.User;
 public interface UserRepository extends GenericRepository<User> {
 	Optional<User> findByEmail(String email);
 	
+	Optional<User> findByVerificationCode(String verificationCode);
+	
 	@Query("MATCH (follower:User), (following:User)\r\n"
 			+ "WHERE id(follower)=$idFollower\r\n"
 			+ "AND id(following)=$idFollowing\r\n"

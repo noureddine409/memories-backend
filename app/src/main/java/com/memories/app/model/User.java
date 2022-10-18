@@ -39,6 +39,8 @@ public class User extends GenericEntity implements UserDetails{
 	private UserType type;
 	private Adress adress;
 	private String refreshTokenId;
+	private String verificationCode;
+	private boolean enabled;
 	
 	@Relationship("HAS_A")
     private List<Role> roles;
@@ -70,7 +72,7 @@ public class User extends GenericEntity implements UserDetails{
 	}
 	@Override
 	public boolean isEnabled() {
-		return true;
+		return this.enabled;
 	}
 	
 }
