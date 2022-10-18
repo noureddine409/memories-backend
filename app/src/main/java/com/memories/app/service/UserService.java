@@ -18,5 +18,11 @@ public interface UserService extends GenericService<User> {
 	public Boolean deleteFollow(Long idFollower, Long idFollowing);
 	
 	public Boolean followExist(Long idFollower, Long idFollowing);
+	
+	public void sendVerificationEmail(User user, String siteURL);
+	
+	public void generateVerificationCode(User user);
+	
+	public boolean verify(String code);
 
 }

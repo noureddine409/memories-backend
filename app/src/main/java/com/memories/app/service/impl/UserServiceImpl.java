@@ -17,7 +17,10 @@ import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.model.User;
 import com.memories.app.repository.UserRepository;
+import com.memories.app.service.EmailSenderService;
 import com.memories.app.service.UserService;
+
+import net.bytebuddy.utility.RandomString;
 
 @Service
 public class UserServiceImpl extends GenericServiceImpl<User> implements UserService {
@@ -27,6 +30,9 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	
+	@Autowired
+	private EmailSenderService senderService;
 	
 	@Override
 	public User findUserByEmail(String email) throws ElementNotFoundException {
@@ -115,5 +121,45 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
         }
         
         return example;
+	}
+
+	@Override
+	public void sendVerificationEmail(User user, String siteURL) {
+		String subject = "Please Verify your email address";
+		String content = "Dear [[name]],<br>"
+				+ "Please click the link below to verify your registration: <br>"
+				+ "<h3><a href=\"[[URL]]\" target=\"_self\" >VERIFY</a></h3>"
+				+ "Thank you, <br>"
+				+ "Memories Social App.";
+		content = content.replace("[[NAME]]", user.getFirstName());
+		String verifyURL = siteURL + "verify?code=" + user.getVerificationCode();
+		content = content.replace("[[URL]]", verifyURL);
+		
+		senderService.sendEmail(user.getEmail(), subject, content);
+				
+		
+	}
+
+	@Override
+	public void generateVerificationCode(User user) {
+		String randomCode = RandomString.make(64);
+		user.setVerificationCode(randomCode);
+		user.setEnabled(false);
+		
+	}
+
+	@Override
+	public boolean verify(String code) {
+		User user = userRepository.findByVerificationCode(code).orElseGet(null);
+		
+		if(user == null || user.isEnabled())
+			return false;
+		else {
+			user.setVerificationCode(null);
+			user.setEnabled(true);
+			userRepository.save(user);
+			
+			return true;
+		}
 	}
 }
