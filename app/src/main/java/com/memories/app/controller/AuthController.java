@@ -28,17 +28,18 @@ import com.memories.app.commun.CoreConstant;
 import com.memories.app.commun.CoreConstant.Exception;
 import com.memories.app.dto.JwtToken;
 import com.memories.app.dto.JwtTokenResponseDto;
+import com.memories.app.dto.ResetPasswordDto;
 import com.memories.app.dto.UserDto;
 import com.memories.app.dto.UserLoginDto;
 import com.memories.app.exception.BusinessException;
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
 import com.memories.app.exception.UnauthorizedException;
+import com.memories.app.model.ForgetPasswordToken;
 import com.memories.app.model.GenericEnum.JwtTokenType;
 import com.memories.app.model.User;
 import com.memories.app.service.UserService;
 import com.memories.app.utils.JwtUtil;
-
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -82,6 +83,26 @@ public class AuthController {
     	userService.sendVerificationEmail(savedUser, getSiteURL(request));
     	
     	return ResponseEntity.ok().body(convertToDto(savedUser));
+    }
+    
+    @GetMapping("/forgetPassword")
+    public ResponseEntity<UserDto> forgetPassword(@RequestParam("email") String email, HttpServletRequest request) {
+    	User userFound = userService.findUserByEmail(email);
+    	
+    	ForgetPasswordToken token = userService.generateForgetPasswordToken(userFound);
+    	
+    	userService.sendForgetPasswordEmail(token, getSiteURL(request));
+    	
+    	return ResponseEntity.ok().body(convertToDto(userFound));
+    }
+    
+    @PostMapping("/resetPassword")
+    public ResponseEntity<Boolean> resetPassword(@RequestBody ResetPasswordDto dto) {
+    	ForgetPasswordToken entity = modelMapper.map(dto.getToken(), ForgetPasswordToken.class);
+    	Boolean response = userService.verifyForgetPasswordToken(entity, dto.getNewPassword());
+    	
+    	
+    	return new ResponseEntity<Boolean>(response, HttpStatus.OK);
     }
     
     @GetMapping("/verify")
