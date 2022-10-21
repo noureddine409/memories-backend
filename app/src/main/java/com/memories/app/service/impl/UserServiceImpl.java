@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -146,8 +145,6 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		content = content.replace("[[URL]]", verifyURL);
 		
 		senderService.sendEmail(user.getEmail(), subject, content);
-				
-		
 	}
 
 	@Override
@@ -175,13 +172,24 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 
 	@Override
 	public ForgetPasswordToken generateForgetPasswordToken(User user) {
+		
 		final String randomCode = RandomString.make(64);
-		ForgetPasswordToken token = new ForgetPasswordToken();
-		token.setUser(user);
-		token.setToken(randomCode);
-		token.setExpiryDate(tokenExpiryMinutes);
-		tokenRepository.save(token);
-		return token;
+		
+		ForgetPasswordToken forget = tokenRepository.findByUser(user.getEmail()).orElse(null);
+		if(forget == null) {
+			ForgetPasswordToken token = new ForgetPasswordToken();
+			token.setUser(user);
+			token.setToken(randomCode);
+			token.setExpiryDate(tokenExpiryMinutes);
+			tokenRepository.save(token);
+			return token;
+		}
+		
+		forget.setToken(randomCode);
+		forget.setExpiryDate(tokenExpiryMinutes);
+		forget.setUser(user);
+		return tokenRepository.save(forget);
+		
 	}
 
 	@Override
@@ -193,9 +201,9 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 				+ "<h3><a href=\"[[URL]]\" target=\"_self\" >RESET PASSWORD</a></h3>"
 				+ "Thank you, <br>"
 				+ "Memories Social App.";
-		content.replace("[[name]]", token.getUser().getFirstName());
+		content = content.replace("[[name]]", token.getUser().getFirstName());
 		String verifyURL = siteURL + "resetPassword?code=" + token.getToken();
-		content.replace("[[URL]]", verifyURL);
+		content = content.replace("[[URL]]", verifyURL);
 		
 		senderService.sendEmail(token.getUser().getEmail(), subject, content);
 		
@@ -212,5 +220,16 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		userRepository.save(user);
 		tokenRepository.delete(found);
 		return true;
+	}
+
+	@Override
+	public ForgetPasswordToken findForgetPasswordToken(String email) throws ElementNotFoundException {
+		Optional<ForgetPasswordToken> found = tokenRepository.findByUser(email);
+		if (found.isPresent()) {
+			ForgetPasswordToken token = found.get();
+			token.setUser(tokenRepository.findById(token.getId()).get().getUser());
+			return token;
+		}
+		throw new ElementNotFoundException(null, new ElementNotFoundException(), CoreConstant.Exception.NOT_FOUND, new Object[] {email});
 	}
 }

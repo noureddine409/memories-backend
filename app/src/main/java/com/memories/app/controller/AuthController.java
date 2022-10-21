@@ -85,6 +85,16 @@ public class AuthController {
     	return ResponseEntity.ok().body(convertToDto(savedUser));
     }
     
+    @GetMapping("/register/resendVerificationMail")
+    public ResponseEntity<?> resendVerification(@RequestParam("email") String email, HttpServletRequest request) {
+    	User user = userService.findUserByEmail(email);
+    	if(!user.isEnabled() || user.getVerificationCode()!=null) {
+    		userService.sendVerificationEmail(user, getSiteURL(request));
+        	return ResponseEntity.ok().build();
+    	}
+    	return ResponseEntity.notFound().build();
+    }
+    
     @GetMapping("/forgetPassword")
     public ResponseEntity<UserDto> forgetPassword(@RequestParam("email") String email, HttpServletRequest request) {
     	User userFound = userService.findUserByEmail(email);
@@ -94,6 +104,13 @@ public class AuthController {
     	userService.sendForgetPasswordEmail(token, getSiteURL(request));
     	
     	return ResponseEntity.ok().body(convertToDto(userFound));
+    }
+    
+    @GetMapping("/forgetPassword/resend")
+    public ResponseEntity<?> resendToken(@RequestParam("email") String email, HttpServletRequest request) {
+    	ForgetPasswordToken token = userService.findForgetPasswordToken(email);
+    	userService.sendForgetPasswordEmail(token, getSiteURL(request));
+    	return ResponseEntity.ok().build();
     }
     
     @PostMapping("/resetPassword")

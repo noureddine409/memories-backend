@@ -31,5 +31,7 @@ public interface UserService extends GenericService<User> {
 	public void sendForgetPasswordEmail(ForgetPasswordToken token, String siteURL);
 
 	public boolean verifyForgetPasswordToken(ForgetPasswordToken token, String newPassword);
+	
+	public ForgetPasswordToken findForgetPasswordToken(String email) throws ElementNotFoundException;
 
 }
