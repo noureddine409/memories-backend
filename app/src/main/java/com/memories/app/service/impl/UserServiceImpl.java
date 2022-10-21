@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,8 +16,10 @@ import com.memories.app.commun.CoreConstant;
 import com.memories.app.dto.Filter;
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
+import com.memories.app.model.ForgetPasswordToken;
 import com.memories.app.model.User;
 import com.memories.app.repository.UserRepository;
+import com.memories.app.repository.forgetPasswordTokenRepository;
 import com.memories.app.service.EmailSenderService;
 import com.memories.app.service.UserService;
 
@@ -33,6 +36,12 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 	
 	@Autowired
 	private EmailSenderService senderService;
+	
+	@Autowired
+	private forgetPasswordTokenRepository tokenRepository;
+	
+	@Value("${form.forget-password.token.expiry}")
+	private int tokenExpiryMinutes;
 	
 	@Override
 	public User findUserByEmail(String email) throws ElementNotFoundException {
@@ -136,8 +145,6 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		content = content.replace("[[URL]]", verifyURL);
 		
 		senderService.sendEmail(user.getEmail(), subject, content);
-				
-		
 	}
 
 	@Override
@@ -161,5 +168,68 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 			
 			return true;
 		}
+	}
+
+	@Override
+	public ForgetPasswordToken generateForgetPasswordToken(User user) {
+		
+		final String randomCode = RandomString.make(64);
+		
+		ForgetPasswordToken forget = tokenRepository.findByUser(user.getEmail()).orElse(null);
+		if(forget == null) {
+			ForgetPasswordToken token = new ForgetPasswordToken();
+			token.setUser(user);
+			token.setToken(randomCode);
+			token.setExpiryDate(tokenExpiryMinutes);
+			tokenRepository.save(token);
+			return token;
+		}
+		
+		forget.setToken(randomCode);
+		forget.setExpiryDate(tokenExpiryMinutes);
+		forget.setUser(user);
+		return tokenRepository.save(forget);
+		
+	}
+
+	@Override
+	public void sendForgetPasswordEmail(ForgetPasswordToken token, String siteURL) {
+		
+		String subject = "Reset Password";
+		String content = "Dear [[name]],<br>"
+				+ "Please click the link below to change your Password: <br>"
+				+ "<h3><a href=\"[[URL]]\" target=\"_self\" >RESET PASSWORD</a></h3>"
+				+ "Thank you, <br>"
+				+ "Memories Social App.";
+		content = content.replace("[[name]]", token.getUser().getFirstName());
+		String verifyURL = siteURL + "resetPassword?code=" + token.getToken();
+		content = content.replace("[[URL]]", verifyURL);
+		
+		senderService.sendEmail(token.getUser().getEmail(), subject, content);
+		
+	}
+
+	@Override
+	public boolean verifyForgetPasswordToken(ForgetPasswordToken token, String newPassword) {
+		ForgetPasswordToken found = tokenRepository.findByToken(token.getToken()).orElse(null);
+		if(found == null || found.isExpired()) {
+			return false;
+		}
+		User user = found.getUser();
+		user.setPassword(passwordEncoder.encode(newPassword));
+		userRepository.save(user);
+		tokenRepository.delete(found);
+		return true;
+	}
+
+	@Override
+	public ForgetPasswordToken findForgetPasswordToken(String email) throws ElementNotFoundException {
+		Optional<ForgetPasswordToken> found = tokenRepository.findByUser(email);
+		if (found.isPresent()) {
+			ForgetPasswordToken token = found.get();
+			token.setUser(tokenRepository.findById(token.getId()).get().getUser());
+			return token;
+		}
+		throw new ElementNotFoundException(null, new ElementNotFoundException(), CoreConstant.Exception.NOT_FOUND, new Object[] {email});
 	}
 }
