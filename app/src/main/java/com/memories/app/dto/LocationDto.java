@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = false)
 public class LocationDto extends GenericDto{
 	private double longitude;
-	private double langitude;
+	private double latitude;
 }

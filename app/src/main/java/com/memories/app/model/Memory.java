@@ -33,11 +33,5 @@ public class Memory extends GenericEntity {
 	@Relationship(type = "MENSIONED_IN", direction = Direction.OUTGOING)
 	private List<User> mensioned;
 	
-	@Relationship(type = "RECEIVED", direction = Direction.INCOMING)
-	private List<Comment> comments;
-	
-	@Relationship(type = "LOVES", direction = Direction.INCOMING)
-	private List<User> lovers;
-	
 
 }
