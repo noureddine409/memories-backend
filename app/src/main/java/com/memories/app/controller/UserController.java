@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.memories.app.dto.ResetPwdDto;
 import com.memories.app.dto.SearchDto;
 import com.memories.app.dto.UserDto;
 import com.memories.app.exception.ElementNotFoundException;
@@ -26,6 +28,9 @@ import com.memories.app.service.UserService;
 @RestController
 @RequestMapping("api/users")
 public class UserController extends GenericController<User, UserDto> {
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 	
 	@Autowired
 	private UserService userService;
@@ -99,6 +104,16 @@ public class UserController extends GenericController<User, UserDto> {
 			userFound.setBackgroundPicture(url);
 			return new ResponseEntity<UserDto>(convertToDto(userService.update(id, currentUser)), HttpStatus.OK);
 			}
+		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	}
+	@PatchMapping("/resetPassword")
+	public ResponseEntity<UserDto> resetPwd(@RequestBody ResetPwdDto dto ) {
+		User currentUser = getCurrentUser();
+		if(passwordEncoder.matches(dto.getOldPassword(), currentUser.getPassword())) {
+			currentUser.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+			User savedUser = userService.update(getCurrentUserId(), currentUser);
+			return new ResponseEntity<UserDto>(convertToDto(savedUser), HttpStatus.OK);
+		}
 		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
 	
