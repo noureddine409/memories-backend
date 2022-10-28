@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -74,7 +75,7 @@ public class AuthController {
     }
     
     @PostMapping("/register")
-    public ResponseEntity<UserDto> saveUser(@RequestBody UserDto userDto, HttpServletRequest request)
+    public ResponseEntity<UserDto> saveUser(@RequestBody @Valid UserDto userDto, HttpServletRequest request)
     		throws ElementAlreadyExistException, UnsupportedEncodingException, MessagingException  {
     	User convertedUser = convertToEntity(userDto);
     	userService.generateVerificationCode(convertedUser);

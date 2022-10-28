@@ -17,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.memories.app.commun.CoreConstant;
 import com.memories.app.dto.ResetPwdDto;
 import com.memories.app.dto.SearchDto;
 import com.memories.app.dto.UserDto;
 import com.memories.app.exception.ElementNotFoundException;
+import com.memories.app.exception.UnauthorizedFileFormatException;
 import com.memories.app.model.User;
 import com.memories.app.service.AwsS3Service;
 import com.memories.app.service.UserService;
@@ -28,6 +30,8 @@ import com.memories.app.service.UserService;
 @RestController
 @RequestMapping("api/users")
 public class UserController extends GenericController<User, UserDto> {
+	
+	
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -85,6 +89,9 @@ public class UserController extends GenericController<User, UserDto> {
 	
 	@PatchMapping("/profilePic/{id}")
 	public ResponseEntity<UserDto> updateProfilePic(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+		
+		if(!file.getContentType().contains("image"))
+			throw new UnauthorizedFileFormatException(null, new UnauthorizedFileFormatException(), CoreConstant.Exception.FILE_UNAUTHORIZED_FORMAT, new Object[]{});
 		User userFound = userService.findById(id);
 		final User currentUser = getCurrentUser();
 		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
@@ -97,6 +104,8 @@ public class UserController extends GenericController<User, UserDto> {
 	
 	@PatchMapping("/backgroundPic/{id}")
 	public ResponseEntity<UserDto> updatebackgroundPic(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+		if(!file.getContentType().contains("image"))
+			throw new UnauthorizedFileFormatException(null, new UnauthorizedFileFormatException(), CoreConstant.Exception.FILE_UNAUTHORIZED_FORMAT, new Object[]{});
 		User userFound = userService.findById(id);
 		final User currentUser = getCurrentUser();
 		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
