@@ -29,7 +29,7 @@ public class User extends GenericEntity implements UserDetails{
 	private String firstName;
 	private String lastName;
 	private String email;
-	private String phoneNumber;
+	private PhoneNumber phoneNumber;
 	private LocalDate birthDay;
 	private String password;
 	private String profilePicture;

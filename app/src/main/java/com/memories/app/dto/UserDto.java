@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.memories.app.model.GenericEnum.Gender;
 import com.memories.app.model.GenericEnum.UserType;
 import com.memories.app.validator.ValidPassword;
+import com.memories.app.validator.ValidPhoneNumber;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,7 +30,8 @@ public class UserDto extends GenericDto{
 	private String lastName;
 	@Email
 	private String email;
-	private String phoneNumber;
+	@ValidPhoneNumber
+	private PhoneNumberDto phoneNumber;
 	private LocalDate birthDay;
 	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY) @ValidPassword @NotBlank
 	private String password;
