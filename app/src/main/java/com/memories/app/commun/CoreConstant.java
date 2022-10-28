@@ -38,6 +38,7 @@ public class CoreConstant {
         public static final String PAGINATION_PAGE_NUMBER = "message.exception.pagination.page.min";
         public static final String PAGINATION_PAGE_SIZE_MIN = "message.exception.pagination.size.min";
         public static final String PAGINATION_PAGE_SIZE_MAX = "message.exception.pagination.size.max";
+        public static final String VALIDATION_FILE_SIZE_MAX = "message.exception.validation.file-size";
         
 	}
 	
