@@ -2,6 +2,8 @@ package com.memories.app.dto;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.memories.app.model.GenericEnum.Activities;
 import com.memories.app.model.GenericEnum.Audience;
 import com.memories.app.model.GenericEnum.Feeling;
@@ -24,6 +26,7 @@ public class MemoryDto extends GenericDto {
 	private LocationDto location;
 	private Feeling feeling;
 	private Activities activity;
+	@JsonProperty(access = Access.READ_ONLY)
 	private UserDto createdBy;
 	private List<UserDto> mensioned;
 	

@@ -1,5 +1,7 @@
 package com.memories.app.validator.impl;
 
+import java.util.Objects;
+
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
@@ -26,7 +28,12 @@ ConstraintValidator<ValidPhoneNumber, PhoneNumberDto> {
 	@Override
 	public boolean isValid(PhoneNumberDto phoneNumber,
 	  ConstraintValidatorContext cxt) {
-		
+		if(phoneNumber == null) return true;
+		else {
+			if(Objects.isNull(phoneNumber.getRegion()) || Objects.isNull(phoneNumber.getPhoneNumber())) {
+				return false;
+			}
+		}
 		PhoneNumber number = null;
 		
 		 try {

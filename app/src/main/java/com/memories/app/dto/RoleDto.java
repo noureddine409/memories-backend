@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class RoleDto extends GenericDto {
-
+	@javax.validation.constraints.NotNull
     private RoleName name;
 
     @Builder

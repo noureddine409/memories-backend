@@ -13,6 +13,6 @@ import lombok.NoArgsConstructor;
 public class Adress extends GenericEntity{
 	private String country;
 	private String city;
-	private int postalCode;
+	private String postalCode;
 
 }
