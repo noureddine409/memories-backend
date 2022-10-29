@@ -132,7 +132,7 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<JwtTokenResponseDto> login(@RequestBody UserLoginDto userLoginDto)
+    public ResponseEntity<JwtTokenResponseDto> login(@Valid @RequestBody UserLoginDto userLoginDto)
             throws UnauthorizedException, ElementNotFoundException {
 
         Authentication authToken =

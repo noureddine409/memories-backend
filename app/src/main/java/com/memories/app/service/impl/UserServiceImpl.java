@@ -52,10 +52,10 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 
 	@Override
 	public User save(User user) throws ElementAlreadyExistException {
-		if (userRepository.findByEmail(user.getEmail()) == null)
+		if (userRepository.findByEmail(user.getEmail()).isPresent())
             throw new ElementAlreadyExistException(null, new ElementAlreadyExistException(), CoreConstant.Exception.ALREADY_EXISTS,
                     new Object[]{user.getEmail()});
-
+		
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         
         return userRepository.save(user);
