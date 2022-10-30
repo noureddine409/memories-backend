@@ -115,7 +115,7 @@ public class AuthController {
     }
     
     @PostMapping("/resetPassword")
-    public ResponseEntity<Boolean> resetPassword(@RequestBody ResetPasswordDto dto) {
+    public ResponseEntity<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDto dto) {
     	ForgetPasswordToken entity = modelMapper.map(dto.getToken(), ForgetPasswordToken.class);
     	Boolean response = userService.verifyForgetPasswordToken(entity, dto.getNewPassword());
     	
