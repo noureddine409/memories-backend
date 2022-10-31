@@ -7,13 +7,11 @@ import java.util.Objects;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-
-
 import com.memories.app.dto.ForgetPasswordTokenDto;
 import com.memories.app.validator.ValidForgetPasswordToken;
 
 public class ForgetPasswordValidator implements ConstraintValidator<ValidForgetPasswordToken, ForgetPasswordTokenDto> {
-
+	
 	@Override
 	public boolean isValid(ForgetPasswordTokenDto value, ConstraintValidatorContext context) {
 		if(Objects.isNull(value)) {
@@ -30,6 +28,7 @@ public class ForgetPasswordValidator implements ConstraintValidator<ValidForgetP
 		if(value.getToken().length() != 64) {
 			return false;
 		}
+		
 		return true;
 	}
 

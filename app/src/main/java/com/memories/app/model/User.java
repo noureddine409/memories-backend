@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class User extends GenericEntity implements UserDetails{
-	private static final long serialVersionUID = -3206802778184562065L;
+	 //private static final long serialVersionUID = -3206802778184562065L;
 	private String firstName;
 	private String lastName;
 	private String email;
