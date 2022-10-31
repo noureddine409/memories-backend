@@ -3,6 +3,8 @@ package com.memories.app.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -29,7 +31,7 @@ public class ContactController extends GenericController<GenericEntity, GenericD
 	private String toEmail;
 	
 	@PostMapping("contactUs")
-	public ResponseEntity<?> contactUs(@RequestBody ContactUsDto dto) {
+	public ResponseEntity<?> contactUs(@Valid @RequestBody ContactUsDto dto) {
 		final User user = getCurrentUser();
 		final String subject = dto.getSubject();
 		Map<String, Object> params = new HashMap<>();
