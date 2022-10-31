@@ -4,6 +4,7 @@ package com.memories.app.exception.handler;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.EXPECTATION_FAILED;
 import static org.springframework.http.HttpStatus.FOUND;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.memories.app.dto.ValidationResponse;
@@ -108,6 +110,12 @@ public class GenericGlobalExceptionHandler extends ResponseEntityExceptionHandle
     @ResponseStatus(INTERNAL_SERVER_ERROR)
     public ResponseEntity<ErrorResponse> handleException(final BusinessException e) {
         return getResponseEntity(INTERNAL_SERVER_ERROR, e);
+    }
+    
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxSizeException(final MaxUploadSizeExceededException e) {
+    	return ResponseEntity.status(UNAUTHORIZED)
+                .body(ErrorResponse.builder().code(EXPECTATION_FAILED.value()).status(EXPECTATION_FAILED).message(e.getMessage().split(";")[0]).build());
     }
 	
     

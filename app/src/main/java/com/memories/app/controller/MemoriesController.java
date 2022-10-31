@@ -1,6 +1,9 @@
 package com.memories.app.controller;
 
 
+import static com.memories.app.model.GenericEnum.MediaType.PICTURE;
+import static com.memories.app.model.GenericEnum.MediaType.VIDEO;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,14 +23,16 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.memories.app.commun.CoreConstant;
 import com.memories.app.dto.MemoryDto;
+import com.memories.app.exception.BusinessException;
 import com.memories.app.exception.ElementNotFoundException;
+import com.memories.app.exception.UnauthorizedFileFormatException;
 import com.memories.app.model.Media;
 import com.memories.app.model.Memory;
 import com.memories.app.model.User;
 import com.memories.app.service.AwsS3Service;
 import com.memories.app.service.MemoriesService;
-
 @RestController
 @RequestMapping("api/memories")
 public class MemoriesController extends GenericController<Memory, MemoryDto> {
@@ -51,22 +56,32 @@ public class MemoriesController extends GenericController<Memory, MemoryDto> {
 	}
 	@PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	ResponseEntity<MemoryDto> saveMemorie(@RequestPart(value ="memory", required = true) MemoryDto memoryDto,
-			@RequestPart(value="files", required = false) MultipartFile[] multipartFiles){
+			@RequestPart(value="files", required = false) MultipartFile[] multipartFiles) throws BusinessException{
 		final Memory entity = convertToEntity(memoryDto);
 		final User currentUser = getCurrentUser();	
 		ArrayList<Media> list = new ArrayList<Media>();
 		entity.setCreatedBy(currentUser);
 		if(multipartFiles != null) {
 			final int mediasnumber = multipartFiles.length ;
+			if(mediasnumber > 10)
+				throw new BusinessException(null, new UnauthorizedFileFormatException(), CoreConstant.Exception.UNAUTHORIZIED_FILE_NUMBER, new Object[]{});
 			for(int i=0; i<mediasnumber; i++) {
+				final String type = multipartFiles[i].getContentType();
+				if(!(type.contains("video") || type.contains("image")))
+					throw new UnauthorizedFileFormatException(null, new UnauthorizedFileFormatException(), CoreConstant.Exception.FILE_UNAUTHORIZED_FORMAT, new Object[]{});
 				Media media = new Media();
 				String path = awsS3Service.save(multipartFiles[i]);
 				media.setPath(path);
 				media.setCreatedAt(media.getCreatedAt());
+				if(type.contains("image")) {
+					media.setType(PICTURE);
+				}
+				if(type.contains("video")) {
+					media.setType(VIDEO);
+				}
 				list.add(media);
 				entity.setMedias(list);
 			}
-			
 		}		
 		
 		Memory saved = memoriesService.save(entity);

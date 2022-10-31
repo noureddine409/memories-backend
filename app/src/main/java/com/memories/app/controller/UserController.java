@@ -1,7 +1,13 @@
 package com.memories.app.controller;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.validation.Valid;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -17,10 +23,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.memories.app.commun.CoreConstant;
 import com.memories.app.dto.ResetPwdDto;
 import com.memories.app.dto.SearchDto;
 import com.memories.app.dto.UserDto;
+import com.memories.app.dto.UserPatchDto;
 import com.memories.app.exception.ElementNotFoundException;
+import com.memories.app.exception.UnauthorizedFileFormatException;
 import com.memories.app.model.User;
 import com.memories.app.service.AwsS3Service;
 import com.memories.app.service.UserService;
@@ -28,6 +37,9 @@ import com.memories.app.service.UserService;
 @RestController
 @RequestMapping("api/users")
 public class UserController extends GenericController<User, UserDto> {
+	
+	@Autowired
+	private ModelMapper modelMapper;
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -49,13 +61,13 @@ public class UserController extends GenericController<User, UserDto> {
 	}
 	
 	@PatchMapping("/{id}")
-	public ResponseEntity<UserDto> patch(@PathVariable Long id, @RequestBody UserDto dto) throws ElementNotFoundException, IllegalArgumentException, IllegalAccessException{
+	public ResponseEntity<UserDto> patch(@PathVariable Long id, @Valid @RequestBody UserPatchDto dto) throws ElementNotFoundException, IllegalArgumentException, IllegalAccessException{
 		final User currentUser = getCurrentUser();
 		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
 			User updated = userService.partialUpdate(id, convertToMap(dto));
 			return new ResponseEntity<UserDto>(convertToDto(updated), HttpStatus.OK);
 		}
-		return new ResponseEntity<>(dto, HttpStatus.UNAUTHORIZED);
+		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
 	
 	@PostMapping("/follows/{idFollowing}")
@@ -85,6 +97,9 @@ public class UserController extends GenericController<User, UserDto> {
 	
 	@PatchMapping("/profilePic/{id}")
 	public ResponseEntity<UserDto> updateProfilePic(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+		
+		if(!file.getContentType().contains("image"))
+			throw new UnauthorizedFileFormatException(null, new UnauthorizedFileFormatException(), CoreConstant.Exception.FILE_UNAUTHORIZED_FORMAT, new Object[]{});
 		User userFound = userService.findById(id);
 		final User currentUser = getCurrentUser();
 		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
@@ -97,6 +112,8 @@ public class UserController extends GenericController<User, UserDto> {
 	
 	@PatchMapping("/backgroundPic/{id}")
 	public ResponseEntity<UserDto> updatebackgroundPic(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+		if(!file.getContentType().contains("image"))
+			throw new UnauthorizedFileFormatException(null, new UnauthorizedFileFormatException(), CoreConstant.Exception.FILE_UNAUTHORIZED_FORMAT, new Object[]{});
 		User userFound = userService.findById(id);
 		final User currentUser = getCurrentUser();
 		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
@@ -115,6 +132,23 @@ public class UserController extends GenericController<User, UserDto> {
 			return new ResponseEntity<UserDto>(convertToDto(savedUser), HttpStatus.OK);
 		}
 		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+	}
+	
+	private Map<String, Object> convertToMap(UserPatchDto dto) throws IllegalArgumentException, IllegalAccessException {
+		User obj = convertToEntity(dto);
+		Map<String, Object> converted = new HashMap<String, Object>();
+		Field[] fields = obj.getClass().getDeclaredFields();
+		for(Field field: fields) {
+			field.setAccessible(true);
+			Object value = field.get(obj);
+			if(value!=null)
+			converted.put(field.getName(), value);
+		}
+		return converted;
+	}
+	
+	private User convertToEntity(UserPatchDto dto) {
+		return modelMapper.map(dto, User.class);
 	}
 	
 

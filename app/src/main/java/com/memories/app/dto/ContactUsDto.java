@@ -1,5 +1,7 @@
 package com.memories.app.dto;
 
+import javax.validation.constraints.NotBlank;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -7,6 +9,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class ForgetPasswordTokenDto {
-	private String token;
+public class ContactUsDto extends GenericDto {
+	@NotBlank
+	private String subject;
+	@NotBlank
+	private String body;
 }

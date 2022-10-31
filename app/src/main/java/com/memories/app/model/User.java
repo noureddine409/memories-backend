@@ -20,16 +20,17 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@SuppressWarnings("serial")
 @Node
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 public class User extends GenericEntity implements UserDetails{
-	private static final long serialVersionUID = -3206802778184562065L;
+	 //private static final long serialVersionUID = -3206802778184562065L;
 	private String firstName;
 	private String lastName;
 	private String email;
-	private String phoneNumber;
+	private PhoneNumber phoneNumber;
 	private LocalDate birthDay;
 	private String password;
 	private String profilePicture;

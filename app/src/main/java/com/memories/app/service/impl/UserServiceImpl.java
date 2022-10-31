@@ -1,7 +1,9 @@
 package com.memories.app.service.impl;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,10 +54,10 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 
 	@Override
 	public User save(User user) throws ElementAlreadyExistException {
-		if (userRepository.findByEmail(user.getEmail()) == null)
+		if (userRepository.findByEmail(user.getEmail()).isPresent())
             throw new ElementAlreadyExistException(null, new ElementAlreadyExistException(), CoreConstant.Exception.ALREADY_EXISTS,
                     new Object[]{user.getEmail()});
-
+		
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         
         return userRepository.save(user);
@@ -135,16 +137,14 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 	@Override
 	public void sendVerificationEmail(User user, String siteURL) {
 		String subject = "Please Verify your email address";
-		String content = "Dear [[name]],<br>"
-				+ "Please click the link below to verify your registration: <br>"
-				+ "<h3><a href=\"[[URL]]\" target=\"_self\" >VERIFY</a></h3>"
-				+ "Thank you, <br>"
-				+ "Memories Social App.";
-		content = content.replace("[[NAME]]", user.getFirstName());
-		String verifyURL = siteURL + "verify?code=" + user.getVerificationCode();
-		content = content.replace("[[URL]]", verifyURL);
 		
-		senderService.sendEmail(user.getEmail(), subject, content);
+		Map<String, Object> mailModel = new HashMap<>();
+		mailModel.put("token", user.getVerificationCode());
+		mailModel.put("user", user);
+		mailModel.put("signature", "http://memories-app.com");
+		mailModel.put("activationUrl", siteURL + "api/auth/verify?code=" + user.getVerificationCode());
+		
+		senderService.sendEmail(user.getEmail(), subject, mailModel, "activate-account.html");
 	}
 
 	@Override
@@ -157,11 +157,14 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 
 	@Override
 	public boolean verify(String code) {
-		User user = userRepository.findByVerificationCode(code).orElseGet(null);
+		Optional<User> userFound = userRepository.findByVerificationCode(code);
 		
-		if(user == null || user.isEnabled())
+		if(userFound.isEmpty())
 			return false;
 		else {
+			User user = userFound.get();
+			if(user.isEnabled())
+				return false;
 			user.setVerificationCode(null);
 			user.setEnabled(true);
 			userRepository.save(user);
@@ -194,18 +197,17 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 
 	@Override
 	public void sendForgetPasswordEmail(ForgetPasswordToken token, String siteURL) {
+		String subject = "reset password";
+		final User user = token.getUser();
+		Map<String, Object> mailModel = new HashMap<>();
+		mailModel.put("token", token);
+		mailModel.put("user", user);
+		mailModel.put("signature", "http://memories-app.com");
+		mailModel.put("resetUrl", siteURL + "api/auth/resetPassword?code=" + token.getToken());
 		
-		String subject = "Reset Password";
-		String content = "Dear [[name]],<br>"
-				+ "Please click the link below to change your Password: <br>"
-				+ "<h3><a href=\"[[URL]]\" target=\"_self\" >RESET PASSWORD</a></h3>"
-				+ "Thank you, <br>"
-				+ "Memories Social App.";
-		content = content.replace("[[name]]", token.getUser().getFirstName());
-		String verifyURL = siteURL + "resetPassword?code=" + token.getToken();
-		content = content.replace("[[URL]]", verifyURL);
-		
-		senderService.sendEmail(token.getUser().getEmail(), subject, content);
+		senderService.sendEmail(user.getEmail(), subject, mailModel, "reset-password.html");
+
+
 		
 	}
 

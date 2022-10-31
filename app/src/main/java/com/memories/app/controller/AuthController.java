@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -74,7 +75,7 @@ public class AuthController {
     }
     
     @PostMapping("/register")
-    public ResponseEntity<UserDto> saveUser(@RequestBody UserDto userDto, HttpServletRequest request)
+    public ResponseEntity<UserDto> saveUser(@RequestBody @Valid UserDto userDto, HttpServletRequest request)
     		throws ElementAlreadyExistException, UnsupportedEncodingException, MessagingException  {
     	User convertedUser = convertToEntity(userDto);
     	userService.generateVerificationCode(convertedUser);
@@ -114,7 +115,7 @@ public class AuthController {
     }
     
     @PostMapping("/resetPassword")
-    public ResponseEntity<Boolean> resetPassword(@RequestBody ResetPasswordDto dto) {
+    public ResponseEntity<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDto dto) {
     	ForgetPasswordToken entity = modelMapper.map(dto.getToken(), ForgetPasswordToken.class);
     	Boolean response = userService.verifyForgetPasswordToken(entity, dto.getNewPassword());
     	
@@ -131,7 +132,7 @@ public class AuthController {
     }
     
     @PostMapping("/login")
-    public ResponseEntity<JwtTokenResponseDto> login(@RequestBody UserLoginDto userLoginDto)
+    public ResponseEntity<JwtTokenResponseDto> login(@Valid @RequestBody UserLoginDto userLoginDto)
             throws UnauthorizedException, ElementNotFoundException {
 
         Authentication authToken =
