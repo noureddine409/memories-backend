@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class ForgetPasswordTokenDto {
-	private String token;
+public class ContactUsDto extends GenericDto {
+	private String subject;
+	private String body;
 }
