@@ -41,4 +41,9 @@ public interface UserRepository extends GenericRepository<User> {
 			+ "return following")
 	List<User> getFollowing(@Param("id") Long id);
 	
+	@Query("MATCH(users: User)\r\n"
+			+ "WHERE users.enabled = false AND  users.createdAt  <= localdatetime.truncate('hour', localdatetime())\r\n"
+			+ "DELETE users")
+	void deleteNotActivatedAccounts() ;
+	
 } 
