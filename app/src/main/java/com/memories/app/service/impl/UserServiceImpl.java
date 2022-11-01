@@ -234,4 +234,10 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		}
 		throw new ElementNotFoundException(null, new ElementNotFoundException(), CoreConstant.Exception.NOT_FOUND, new Object[] {email});
 	}
+
+	@Override
+	public void deleteNotActivatedAccounts() {
+		userRepository.deleteNotActivatedAccounts();
+		
+	}
 }
