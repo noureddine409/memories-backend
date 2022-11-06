@@ -142,7 +142,7 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		mailModel.put("token", user.getVerificationCode());
 		mailModel.put("user", user);
 		mailModel.put("signature", "http://memories-app.com");
-		mailModel.put("activationUrl", siteURL + "api/auth/verify?code=" + user.getVerificationCode());
+		mailModel.put("activationUrl", siteURL + "/api/auth/verify?code=" + user.getVerificationCode());
 		
 		senderService.sendEmail(user.getEmail(), subject, mailModel, "activate-account.html");
 	}

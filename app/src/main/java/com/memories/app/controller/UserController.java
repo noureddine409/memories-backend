@@ -47,6 +47,8 @@ public class UserController extends GenericController<User, UserDto> {
 	@Autowired
 	private UserService userService;
 	
+	
+	
 	@Autowired
 	private AwsS3Service awsS3Service;
 	@GetMapping
@@ -134,6 +136,7 @@ public class UserController extends GenericController<User, UserDto> {
 		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
 	
+	
 	private Map<String, Object> convertToMap(UserPatchDto dto) throws IllegalArgumentException, IllegalAccessException {
 		User obj = convertToEntity(dto);
 		Map<String, Object> converted = new HashMap<String, Object>();
@@ -146,6 +149,8 @@ public class UserController extends GenericController<User, UserDto> {
 		}
 		return converted;
 	}
+	
+	
 	
 	private User convertToEntity(UserPatchDto dto) {
 		return modelMapper.map(dto, User.class);
