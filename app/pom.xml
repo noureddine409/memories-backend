@@ -95,6 +95,10 @@
 	        <artifactId>libphonenumber</artifactId>
 	        <version>8.12.16</version>
       </dependency>
+      <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+	  </dependency>
 		
 	</dependencies>
 
