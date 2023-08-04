@@ -1,14 +1,12 @@
 package com.memories.app.validator.impl;
 
 
-
-import java.util.Objects;
-
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-
 import com.memories.app.dto.ForgetPasswordTokenDto;
 import com.memories.app.validator.ValidForgetPasswordToken;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+
+import java.util.Objects;
 
 public class ForgetPasswordValidator implements ConstraintValidator<ValidForgetPasswordToken, ForgetPasswordTokenDto> {
 	

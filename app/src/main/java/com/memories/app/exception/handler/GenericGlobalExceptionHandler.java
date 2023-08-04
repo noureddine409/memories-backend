@@ -1,26 +1,15 @@
 package com.memories.app.exception.handler;
 
 
-
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.EXPECTATION_FAILED;
-import static org.springframework.http.HttpStatus.FOUND;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.neo4j.driver.internal.shaded.io.netty.util.internal.StringUtil;
+import com.memories.app.dto.ValidationResponse;
+import com.memories.app.exception.*;
+import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -32,50 +21,47 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.memories.app.dto.ValidationResponse;
-import com.memories.app.exception.BadRequestException;
-import com.memories.app.exception.BusinessException;
-import com.memories.app.exception.ElementAlreadyExistException;
-import com.memories.app.exception.ElementNotFoundException;
-import com.memories.app.exception.ElementNotUniqueException;
-import com.memories.app.exception.UnauthorizedException;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-
-
+import static org.springframework.http.HttpStatus.*;
 
 
 @RestControllerAdvice
 public class GenericGlobalExceptionHandler extends ResponseEntityExceptionHandler {
-	
-	final Logger LOG = LoggerFactory.getLogger(GenericGlobalExceptionHandler.class);
-	
-	@Autowired
-	private MessageSource messageSource;
-	
-	@Override
-	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-				.body(ErrorResponse.builder()
-				.code(HttpStatus.BAD_REQUEST.value())
-				.status(HttpStatus.BAD_REQUEST)
-				.message(ex.getMessage().split(":")[0])
-				.build());		
-	}
-	
-	@Override
-	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		List<ValidationResponse> validations = ex.getBindingResult().getFieldErrors().stream()
-				.map(fieldError -> ValidationResponse.builder()
+
+    final Logger LOG = LoggerFactory.getLogger(GenericGlobalExceptionHandler.class);
+
+    private final MessageSource messageSource;
+
+    public GenericGlobalExceptionHandler(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.builder()
+                        .code(HttpStatus.BAD_REQUEST.value())
+                        .status(HttpStatus.BAD_REQUEST)
+                        .message(ex.getMessage().split(":")[0])
+                        .build());
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        List<ValidationResponse> validations = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> ValidationResponse.builder()
                         .field(fieldError.getField())
                         .message(getMessage(fieldError))
                         .build())
-				.collect(Collectors.toList());
-		return ResponseEntity.badRequest().body(validations);
-	}
-	
-	@ExceptionHandler(value = UnauthorizedException.class)
+                .collect(Collectors.toList());
+        return ResponseEntity.badRequest().body(validations);
+    }
+
+
+    @ExceptionHandler(value = UnauthorizedException.class)
     @ResponseStatus(UNAUTHORIZED)
     public ResponseEntity<ErrorResponse> handleException(final UnauthorizedException e) {
         return getResponseEntity(UNAUTHORIZED, e);
@@ -111,16 +97,16 @@ public class GenericGlobalExceptionHandler extends ResponseEntityExceptionHandle
     public ResponseEntity<ErrorResponse> handleException(final BusinessException e) {
         return getResponseEntity(INTERNAL_SERVER_ERROR, e);
     }
-    
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleMaxSizeException(final MaxUploadSizeExceededException e) {
-    	return ResponseEntity.status(UNAUTHORIZED)
+        return ResponseEntity.status(UNAUTHORIZED)
                 .body(ErrorResponse.builder().code(EXPECTATION_FAILED.value()).status(EXPECTATION_FAILED).message(e.getMessage().split(";")[0]).build());
     }
-	
-    
+
+
     private ResponseEntity<ErrorResponse> getResponseEntity(final HttpStatus status, final BusinessException e) {
-        if(Objects.isNull(e.getKey())){
+        if (Objects.isNull(e.getKey())) {
             // default message
             return ResponseEntity.status(status)
                     .body(ErrorResponse.builder().code(status.value()).status(status).message(e.getMessage()).build());
@@ -128,16 +114,16 @@ public class GenericGlobalExceptionHandler extends ResponseEntityExceptionHandle
         return ResponseEntity.status(status)
                 .body(ErrorResponse.builder().code(status.value()).status(status).message(getMessage(e)).build());
     }
-    
- // message from properties
+
+    // message from properties
     private String getMessage(final BusinessException e) {
-        return messageSource.getMessage(e.getKey(),e.getArgs(),null);
+        return messageSource.getMessage(e.getKey(), e.getArgs(), null);
     }
 
     private String getMessage(final FieldError fieldError) {
         return !StringUtil.isNullOrEmpty(fieldError.getDefaultMessage()) ? fieldError.getDefaultMessage() :
-        messageSource.getMessage(Objects.requireNonNull(fieldError.getCode()), fieldError.getArguments(), null);
+                messageSource.getMessage(Objects.requireNonNull(fieldError.getCode()), fieldError.getArguments(), null);
     }
-	
+
 
 }

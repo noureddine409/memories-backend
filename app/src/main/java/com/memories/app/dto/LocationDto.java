@@ -1,10 +1,8 @@
 package com.memories.app.dto;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-
 import com.memories.app.commun.CoreConstant.Validation;
-
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

@@ -1,28 +1,5 @@
 package com.memories.app.controller;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.validation.Valid;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.memories.app.commun.CoreConstant;
 import com.memories.app.dto.ResetPwdDto;
 import com.memories.app.dto.SearchDto;
@@ -33,28 +10,45 @@ import com.memories.app.exception.UnauthorizedFileFormatException;
 import com.memories.app.model.User;
 import com.memories.app.service.AwsS3Service;
 import com.memories.app.service.UserService;
+import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/users")
 public class UserController extends GenericController<User, UserDto> {
 	
-	@Autowired
-	private ModelMapper modelMapper;
+	private final ModelMapper modelMapper;
 	
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+	private final PasswordEncoder passwordEncoder;
 	
-	@Autowired
-	private UserService userService;
+	private final UserService userService;
 	
 	
 	
-	@Autowired
-	private AwsS3Service awsS3Service;
+	private final AwsS3Service awsS3Service;
+
+	public UserController(ModelMapper modelMapper, PasswordEncoder passwordEncoder, UserService userService, AwsS3Service awsS3Service) {
+		this.modelMapper = modelMapper;
+		this.passwordEncoder = passwordEncoder;
+		this.userService = userService;
+		this.awsS3Service = awsS3Service;
+	}
+
 	@GetMapping
 	ResponseEntity<List<UserDto>> getAll(@RequestBody SearchDto search) {
 		List<User> entities = userService.findAll(PageRequest.of(search.getPage(), search.getSize()) , search.getFilters()).getContent();
-		return new ResponseEntity<List<UserDto>>(convertListToDto(entities, UserDto.class), HttpStatus.OK);
+		return new ResponseEntity<>(convertListToDto(entities, UserDto.class), HttpStatus.OK);
 	}
 	
 	@GetMapping("/{id}")
@@ -67,7 +61,7 @@ public class UserController extends GenericController<User, UserDto> {
 		final User currentUser = getCurrentUser();
 		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
 			User updated = userService.partialUpdate(id, convertToMap(dto));
-			return new ResponseEntity<UserDto>(convertToDto(updated), HttpStatus.OK);
+			return new ResponseEntity<>(convertToDto(updated), HttpStatus.OK);
 		}
 		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
@@ -77,10 +71,10 @@ public class UserController extends GenericController<User, UserDto> {
 		final Long id = getCurrentUser().getId();
 		if(userService.followExist(id, idFollowing)) {
 			userService.deleteFollow(id, idFollowing);
-			return new ResponseEntity<Boolean>(Boolean.FALSE, HttpStatus.OK);
+			return new ResponseEntity<>(Boolean.FALSE, HttpStatus.OK);
 		}
 		userService.addFollow(id, idFollowing);
-		return new ResponseEntity<Boolean>(Boolean.TRUE, HttpStatus.OK);
+		return new ResponseEntity<>(Boolean.TRUE, HttpStatus.OK);
 	}
 	
 	@GetMapping("/followers/{id}")
@@ -107,7 +101,7 @@ public class UserController extends GenericController<User, UserDto> {
 		if(currentUser.getEmail().equals(userService.findById(id).getEmail())) {
 			final String url = awsS3Service.save(file);
 			userFound.setProfilePicture(url);
-			return new ResponseEntity<UserDto>(convertToDto(userService.update(id, currentUser)), HttpStatus.OK);
+			return new ResponseEntity<>(convertToDto(userService.update(id, currentUser)), HttpStatus.OK);
 			}
 		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
@@ -131,7 +125,7 @@ public class UserController extends GenericController<User, UserDto> {
 		if(passwordEncoder.matches(dto.getOldPassword(), currentUser.getPassword())) {
 			currentUser.setPassword(passwordEncoder.encode(dto.getNewPassword()));
 			User savedUser = userService.update(getCurrentUserId(), currentUser);
-			return new ResponseEntity<UserDto>(convertToDto(savedUser), HttpStatus.OK);
+			return new ResponseEntity<>(convertToDto(savedUser), HttpStatus.OK);
 		}
 		return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 	}
@@ -139,7 +133,7 @@ public class UserController extends GenericController<User, UserDto> {
 	
 	private Map<String, Object> convertToMap(UserPatchDto dto) throws IllegalArgumentException, IllegalAccessException {
 		User obj = convertToEntity(dto);
-		Map<String, Object> converted = new HashMap<String, Object>();
+		Map<String, Object> converted = new HashMap<>();
 		Field[] fields = obj.getClass().getDeclaredFields();
 		for(Field field: fields) {
 			field.setAccessible(true);

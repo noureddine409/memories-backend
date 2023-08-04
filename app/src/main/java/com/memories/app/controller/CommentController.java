@@ -1,28 +1,17 @@
 package com.memories.app.controller;
 
-import java.util.List;
-
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.memories.app.dto.CommentDto;
 import com.memories.app.model.Comment;
 import com.memories.app.model.Memory;
 import com.memories.app.model.User;
 import com.memories.app.service.CommentService;
 import com.memories.app.service.MemoriesService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 
@@ -30,12 +19,15 @@ import com.memories.app.service.MemoriesService;
 @RequestMapping("api/comments")
 public class CommentController extends GenericController<Comment, CommentDto> {
 	
-	@Autowired
-	private CommentService commentService;
+	private final CommentService commentService;
 	
-	@Autowired
-	private MemoriesService memoriesService;
-	
+	private final MemoriesService memoriesService;
+
+	public CommentController(CommentService commentService, MemoriesService memoriesService) {
+		this.commentService = commentService;
+		this.memoriesService = memoriesService;
+	}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<CommentDto> getById(@PathVariable Long id){
 		return new ResponseEntity<>(convertToDto(commentService.findById(id)), HttpStatus.OK);
@@ -55,7 +47,7 @@ public class CommentController extends GenericController<Comment, CommentDto> {
 		
 		entity.setMemory(memory);
 		entity.setOwner(currentUser);
-		return new ResponseEntity<CommentDto>(convertToDto(commentService.save(entity)), HttpStatus.CREATED);
+		return new ResponseEntity<>(convertToDto(commentService.save(entity)), HttpStatus.CREATED);
 	}
 	
 	@DeleteMapping("/{id}")

@@ -1,37 +1,10 @@
 package com.memories.app.controller;
 
 
-
-
-
-import java.io.UnsupportedEncodingException;
-
-import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.memories.app.commun.CoreConstant;
 import com.memories.app.commun.CoreConstant.Exception;
-import com.memories.app.dto.JwtToken;
-import com.memories.app.dto.JwtTokenResponseDto;
-import com.memories.app.dto.ResetPasswordDto;
-import com.memories.app.dto.UserDto;
-import com.memories.app.dto.UserLoginDto;
+import com.memories.app.dto.*;
 import com.memories.app.exception.BusinessException;
 import com.memories.app.exception.ElementAlreadyExistException;
 import com.memories.app.exception.ElementNotFoundException;
@@ -41,9 +14,15 @@ import com.memories.app.model.GenericEnum.JwtTokenType;
 import com.memories.app.model.User;
 import com.memories.app.service.UserService;
 import com.memories.app.utils.JwtUtil;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -76,7 +55,7 @@ public class AuthController {
     
     @PostMapping("/register")
     public ResponseEntity<UserDto> saveUser(@RequestBody @Valid UserDto userDto, HttpServletRequest request)
-    		throws ElementAlreadyExistException, UnsupportedEncodingException, MessagingException  {
+    		throws ElementAlreadyExistException {
     	User convertedUser = convertToEntity(userDto);
     	userService.generateVerificationCode(convertedUser);
     	User savedUser = userService.save(convertedUser);
@@ -120,15 +99,15 @@ public class AuthController {
     	Boolean response = userService.verifyForgetPasswordToken(entity, dto.getNewPassword());
     	
     	
-    	return new ResponseEntity<Boolean>(response, HttpStatus.OK);
+    	return new ResponseEntity<>(response, HttpStatus.OK);
     }
     
     @GetMapping("/verify")
     public ResponseEntity<String> verifyUser(@RequestParam("code") String code) {
     	if( userService.verify(code)) {
-    		return new ResponseEntity<String>("verify_success", HttpStatus.OK);
+    		return new ResponseEntity<>("verify_success", HttpStatus.OK);
     	}
-    	return new ResponseEntity<String>("verify_fail", HttpStatus.UNAUTHORIZED);
+    	return new ResponseEntity<>("verify_fail", HttpStatus.UNAUTHORIZED);
     }
     
     @PostMapping("/login")
@@ -166,8 +145,7 @@ public class AuthController {
     }
     
     @PostMapping("/token")
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") })
-    public ResponseEntity<JwtTokenResponseDto> refreshToken(HttpServletRequest request, HttpServletResponse response) throws BusinessException {
+    public ResponseEntity<JwtTokenResponseDto> refreshToken(HttpServletRequest request) throws BusinessException {
 
         String refreshToken = jwtProvider.extractTokenFromRequest(request);
 

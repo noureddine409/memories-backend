@@ -1,19 +1,5 @@
 package com.memories.app.service.impl;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import com.memories.app.commun.CoreConstant;
 import com.memories.app.dto.Filter;
 import com.memories.app.exception.ElementAlreadyExistException;
@@ -24,27 +10,42 @@ import com.memories.app.repository.UserRepository;
 import com.memories.app.repository.forgetPasswordTokenRepository;
 import com.memories.app.service.EmailSenderService;
 import com.memories.app.service.UserService;
+import org.modelmapper.internal.bytebuddy.utility.RandomString;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import net.bytebuddy.utility.RandomString;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 
 @Service
 public class UserServiceImpl extends GenericServiceImpl<User> implements UserService {
 	
-	@Autowired
-	private UserRepository userRepository;
+	private final UserRepository userRepository;
 	
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+	private final PasswordEncoder passwordEncoder;
 	
-	@Autowired
-	private EmailSenderService senderService;
+	private final EmailSenderService senderService;
 	
-	@Autowired
-	private forgetPasswordTokenRepository tokenRepository;
+	private final forgetPasswordTokenRepository tokenRepository;
 	
 	@Value("${form.forget-password.token.expiry}")
 	private int tokenExpiryMinutes;
-	
+
+	public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailSenderService senderService, forgetPasswordTokenRepository tokenRepository) {
+		this.userRepository = userRepository;
+		this.passwordEncoder = passwordEncoder;
+		this.senderService = senderService;
+		this.tokenRepository = tokenRepository;
+	}
+
 	@Override
 	public User findUserByEmail(String email) throws ElementNotFoundException {
 		Optional<User> user = userRepository.findByEmail(email);
@@ -123,11 +124,9 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
         	
         	for (final Filter filter: filters) {
         		final Field fieldName = user.getClass().getDeclaredField(filter.getFilterName());
-        		if(fieldName !=null) {
-        			fieldName.setAccessible(true);
-        			fieldName.set(user, filter.getAppliedValue());
-        		}
-        	}
+				fieldName.setAccessible(true);
+				fieldName.set(user, filter.getAppliedValue());
+			}
         	example = Example.of(user, ExampleMatcher.matchingAny());
         }
         
@@ -141,7 +140,7 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		Map<String, Object> mailModel = new HashMap<>();
 		mailModel.put("token", user.getVerificationCode());
 		mailModel.put("user", user);
-		mailModel.put("signature", "http://memories-app.com");
+		mailModel.put("signature", "https://memories-app.com");
 		mailModel.put("activationUrl", siteURL + "/api/auth/verify?code=" + user.getVerificationCode());
 		
 		senderService.sendEmail(user.getEmail(), subject, mailModel, "activate-account.html");
@@ -202,7 +201,7 @@ public class UserServiceImpl extends GenericServiceImpl<User> implements UserSer
 		Map<String, Object> mailModel = new HashMap<>();
 		mailModel.put("token", token);
 		mailModel.put("user", user);
-		mailModel.put("signature", "http://memories-app.com");
+		mailModel.put("signature", "https://memories-app.com");
 		mailModel.put("resetUrl", siteURL + "api/auth/resetPassword?code=" + token.getToken());
 		
 		senderService.sendEmail(user.getEmail(), subject, mailModel, "reset-password.html");

@@ -1,25 +1,6 @@
 package com.memories.app.utils;
 
 
-
-
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.logging.log4j.util.Strings;
-import org.neo4j.driver.internal.shaded.io.netty.util.internal.StringUtil;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.stereotype.Component;
-
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTCreator;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -32,6 +13,20 @@ import com.memories.app.exception.BusinessException;
 import com.memories.app.exception.UnauthorizedException;
 import com.memories.app.model.GenericEnum.JwtTokenType;
 import com.memories.app.model.User;
+import io.netty.util.internal.StringUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
@@ -47,9 +42,6 @@ public class JwtUtil {
 
     @Value("${jwt.refresh-token.expiration-in-weeks}")
     private int refreshTokenExpirationInWeeks;
-
-    @Value("${jwt.token.issuer}")
-    private String tokenIssuer;
 
     public JwtToken generateToken(User user, JwtTokenType tokenType) throws BusinessException {
         String secret;

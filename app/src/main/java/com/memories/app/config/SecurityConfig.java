@@ -1,10 +1,8 @@
 package com.memories.app.config;
 
-import static java.util.concurrent.TimeUnit.DAYS;
-import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
-
-import java.util.List;
+import com.memories.app.exception.BusinessException;
+import com.memories.app.security.JwtAuthorizationFilter;
+import com.memories.app.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,16 +21,17 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.memories.app.exception.BusinessException;
-import com.memories.app.security.JwtAuthorizationFilter;
-import com.memories.app.utils.JwtUtil;
+import java.util.List;
 
+import static java.util.concurrent.TimeUnit.DAYS;
+import static org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
-	@Value("${cors.allowed-origins}")
+    @Value("${cors.allowed-origins}")
     private List<String> corsAllowedOrigins;
 
     @Value("${cors.allowed-heathers}")
@@ -56,20 +56,17 @@ public class SecurityConfig {
         }
 
         @Bean
-        public SecurityFilterChain jwtFilterChain(HttpSecurity http) throws Exception{
-
+        public SecurityFilterChain jwtFilterChain(HttpSecurity http) throws Exception {
             http
-                    .cors()
-                    .and()
-                    .csrf().disable()
+                    .cors(AbstractHttpConfigurer::disable)
+                    .csrf(AbstractHttpConfigurer::disable)
                     .sessionManagement((session) -> session.sessionCreationPolicy(STATELESS))
-                    .antMatcher("/api/**")
+                    .securityMatcher("/api/**")
                     .authorizeHttpRequests((authorize) -> authorize
-                                    .antMatchers(jwtAuthWhiteList.toArray(String[]::new)).permitAll()
-                                    .anyRequest().authenticated()
+                            .requestMatchers(jwtAuthWhiteList.toArray(String[]::new)).permitAll()
+                            .anyRequest().authenticated()
                     )
                     .addFilterBefore(new JwtAuthorizationFilter(jwtProvider, jwtAuthWhiteList, handlerExceptionResolver), UsernamePasswordAuthenticationFilter.class);
-
             return http.build();
         }
     }
@@ -100,19 +97,17 @@ public class SecurityConfig {
         public SecurityFilterChain formFilterChain(HttpSecurity http) throws Exception {
 
             http
-                    .csrf().disable()
+                    .csrf(AbstractHttpConfigurer::disable)
                     .sessionManagement((session) -> session.sessionCreationPolicy(IF_REQUIRED))
-                    .requestMatchers()
-                    .antMatchers(formAuthWhiteList.stream().toArray(String[]::new))
-                    .and()
+                    .securityMatcher(formAuthWhiteList.toArray(String[]::new))
                     .authorizeHttpRequests((authorize) -> {
-                                try {
-                                    authorize
-                                            .antMatchers(formAuthWhiteList.toArray(String[]::new)).permitAll()
-                                            .anyRequest().authenticated();
-                                } catch (Exception e) {
-                                    throw new BusinessException(e.getMessage(), e.getCause(), null, null);
-                                }
+                        try {
+                            authorize
+                                    .requestMatchers(formAuthWhiteList.toArray(String[]::new)).permitAll()
+                                    .anyRequest().authenticated();
+                        } catch (Exception e) {
+                            throw new BusinessException(e.getMessage(), e.getCause(), null, null);
+                        }
                     })
                     .formLogin((form) -> form.defaultSuccessUrl(formSuccessUrl))
                     .rememberMe(rememberMe -> rememberMe
@@ -127,6 +122,7 @@ public class SecurityConfig {
 
             return http.build();
         }
+
     }
 
     @Bean
