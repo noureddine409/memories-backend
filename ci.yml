@@ -18,7 +18,7 @@ jobs:
           docker run --rm \
             -v $(pwd):/app \
             -w /app \
-            maven:3.8.4-openjdk-11 \
+            maven:3.8.6-openjdk-18 \
             mvn clean install
 
       - name: Set up SonarQube in Docker
@@ -51,17 +51,3 @@ jobs:
             echo "SonarQube Quality Gate failed. Exiting..."
             exit 1
           fi
-
-      - name: Build and Push Docker Image
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        run: |
-          # Build Docker image
-          docker build -t yourusername/noureddinelachgar-image .
-
-          # Login to Docker Hub
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
-
-          # Push Docker image to Docker Hub
-          docker push yourusername/noureddinelachgar-image
