@@ -1,0 +1,67 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-sonarqube:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build with Maven in Docker
+        run: |
+          docker run --rm \
+            -v $(pwd):/app \
+            -w /app \
+            maven:3.8.4-openjdk-11 \
+            mvn clean install
+
+      - name: Set up SonarQube in Docker
+        run: |
+          docker run --rm -d \
+            --name sonarqube \
+            -e SONAR_HOST_URL=http://your_sonarqube_server_url:9000 \
+            -e SONAR_LOGIN=your_sonarqube_token \
+            sonarqube:latest
+
+      - name: Wait for SonarQube to start
+        run: |
+          until $(curl --output /dev/null --silent --head --fail -u your_sonarqube_token: http://your_sonarqube_server_url:9000/api/system/status); do
+            echo "Waiting for SonarQube to start..."
+            sleep 5
+          done
+
+      - name: Run SonarQube analysis in Docker
+        run: |
+          docker run --rm \
+            -v $(pwd):/app \
+            -w /app \
+            --link sonarqube:sonarqube \
+            sonarsource/sonar-scanner-cli:latest
+
+      - name: Check SonarQube Quality Gate Status
+        run: |
+          quality_gate_status=$(curl -s -u your_sonarqube_token: http://your_sonarqube_server_url:9000/api/qualitygates/project_status?projectKey=your_project_key | jq -r '.projectStatus.status')
+          if [ "$quality_gate_status" != "OK" ]; then
+            echo "SonarQube Quality Gate failed. Exiting..."
+            exit 1
+          fi
+
+      - name: Build and Push Docker Image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          # Build Docker image
+          docker build -t yourusername/noureddinelachgar-image .
+
+          # Login to Docker Hub
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+          # Push Docker image to Docker Hub
+          docker push yourusername/noureddinelachgar-image
