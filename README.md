@@ -3,14 +3,6 @@
 ## Overview
 Social Memory Network is a web application that allows users to share and cherish their memories. Built with Spring Boot, Spring Data Neo4j, and Amazon S3, this application provides a platform for users to connect, share, and relive their special moments through photos, stories, and more.
 
-## Table of Contents
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Database Configuration](#database-configuration)
-- [Amazon S3 Configuration](#amazon-s3-configuration)
-- [Running the Application](#running-the-application)
-
 
 ## Prerequisites
 - Java JDK 17 or higher
@@ -34,8 +26,9 @@ spring.data.neo4j.uri=bolt://localhost:7687
 spring.data.neo4j.username=neo4j
 spring.data.neo4j.password=password
 ```
-# Amazon S3
+
 ```bash
+# Amazon S3
 aws.accessKeyId=your-access-key-id
 aws.secretKey=your-secret-key
 aws.s3.bucket-name=your-s3-bucket-name
